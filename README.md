@@ -146,3 +146,164 @@ int main()
 	printf("result : %d\n", n);
 }
 ```
+
+
+
+
+
+## MASM 기본 문법
+### 어셈블리 기본 코드
+#### 함수 이름
+* VC 에서 C언어로 foo 함수를 만들면
+* visual studio 컴파일러는 컴파일시에 함수 이름 앞에 "_" 를 추가함 -> _foo
+* c 표준이 아니라 컴파일러마다 다르게 동작.
+* asm_main 함수를 만들거나 호출 할때 함수이름
+  | C언어 | asm_main() |
+  |------- | ---------|
+  |인라인 어셈블리 | asm_main()|
+  |어셈블리 파일 | **_asm_main()** |
+
+``` c++
+  // main.c
+#include <stdio.h>
+
+int asm_main();
+
+//void foo();
+
+int main()
+{
+	//foo();
+
+	int n = asm_main(); // call _asm_main	
+
+	printf("result : %d\n", n);
+}
+
+```
+#### MASM Directive
+* 대소문자를 구별하지 않음
+* 파일 끝에 반드시 "end"가 있어야 함
+* .model directive (memory model, language-type, stack option)(16,32bit에서만 사용)
+  | | 32bit | 16bit |
+  |----| ----| -----|
+  |memory model | FLAT | TINY, SMALL, COMPACT, MEDIUM. LARGE, HUGE, FLAT|
+  |language-type| C, STDCALL| C, BISCI, FORTRAN, PASCAL, SYSCALL, STDCALL|
+  | Stack-option| NOT USED | NEARSTACK, FARSTACK|
+  
+* 1. .model flat
+  2. .model flat, C
+  3. .model flat, stdcall
+ #### PE Format
+ ![image](https://github.com/jiin212/WINDOWS_SYSTEM/assets/49266230/a0fad917-4f75-4fb9-894b-9cafef88f44a)
+#### 함수를 만드는 방법
+* "함수이름:"
+* ret 명령의 함수 종료
+* eax 레지스터에 넣은 값이 함수 반환값
+* 함수를 다른 파일(C언어)에서 호출하기 위해서는 Public 지시어를 사용해서 선언.
+```asm
+; asm1.asm
+
+.model flat
+
+public _asm_main
+
+;.data
+; 전역변수 만드는 자리.
+
+.code   ; .text 
+
+_asm_main:
+	mov		eax, 100
+	ret
+
+end
+
+```
+* 이런 표기법도 가능
+```asm
+; asm2.asm
+
+.model flat
+
+public _asm_main
+
+_DATA SEGMENT
+; 전역변수 만드는 자리.
+_DATA ENDS
+
+_TEXT SEGMENT
+
+_asm_main proc
+	mov		eax, 100
+	ret
+_asm_main endp
+
+_TEXT ends
+
+end
+```
+
+
+#### C 소스코드를 어셈블리 파일로 생성하는 방법
+* Developer Command Prompt 실행 후, 소스가 있는 디렉터리로 이동
+* cl 소스이름.c/FAs /c
+* "소스이름.asm" 파일 생성
+* 
+
+### Data Segment
+
+#### 전역변수 만들기
+![image](https://github.com/jiin212/WINDOWS_SYSTEM/assets/49266230/1fb8f4ee-91d3-40c8-ad58-a9a84e11e4b9)
+
+
+ ```c
+// call.c
+int add()
+{
+	return 300;
+}
+void __fastcall foo(int a, int b, int c, int d)
+{
+
+}
+int main()
+{
+	foo(1, 2, 3, 4);
+	add();
+}
+
+```
+```asm
+; asm1.asm
+.model flat
+
+public _asm_main
+
+.code
+
+_asm_main:	
+	mov		eax, 100
+
+	;  다른 함수 호출
+	;mov	ebx, POS_A
+	;push	POS_A
+	;jmp		_add
+;POS_A:
+ 
+	call	_add
+
+	ret	
+
+
+_add:
+	mov		eax, 300
+	ret
+
+	;pop		ebx
+	;jmp		ebx
+
+
+end
+
+```
